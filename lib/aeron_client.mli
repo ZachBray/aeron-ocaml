@@ -47,7 +47,7 @@ module Publication : sig
 
   val close : t -> unit
   (** Closes the publication. Users must not perform any further operations
-      on the publication. *)
+      on the publication after calling this method. *)
 
   val offer :
     buffer:Unsafe_buffer.t -> offset:int32 -> length:int32 -> t -> Code.t
@@ -63,3 +63,29 @@ val add_exclusive_publication :
 (** Creates a new exclusive (i.e., single-threaded) publication for
     transmission of messages. Users should call [Publication.close] once
     finished using the publication. *)
+
+(** {2 Subscribing} *)
+
+type fragment_handler = Unsafe_buffer.t -> int -> unit
+
+module Subscription : sig
+  type t
+
+  val poll : fragment_limit:int32 -> fragment_handler -> t -> int32
+  (** Poll for new messages in a stream. If new messages are found beyond the
+      last consumed position then they will be delivered to the handler up to
+      a limited number of fragments as specified. Returns the number of
+      fragments read. *)
+
+  val close : t -> unit
+  (** Closes the subscription. Users must not perform any further operations
+      on the subscription after calling this method. *)
+end
+
+val add_subscription :
+     channel_uri:string
+  -> stream_id:int32
+  -> t
+  -> (Subscription.t, string) Result.t
+(** Creates a new subscription for the reception of messages. Users should
+    call [Subscription.close] once finished using the subscription. *)

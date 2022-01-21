@@ -2,10 +2,12 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #define CAML_NAME_SPACE
 #include "caml/alloc.h"
 #include "caml/misc.h"
 #include "caml/memory.h"
+#include "caml/callback.h"
 #include "aeron/aeron-client/src/main/c/aeronc.h"
 
 inline void* as_ptr(value v) {
@@ -155,5 +157,59 @@ CAMLprim void aeron_ocaml_exclusive_publication_close_byte(value p) {
   CAMLparam1(p);
   aeron_exclusive_publication_t *publication = (aeron_exclusive_publication_t*) as_ptr(p);
   aeron_exclusive_publication_close(publication, NULL, NULL);
+  CAMLreturn0;
+}
+
+CAMLprim value aeron_ocaml_client_add_subscription_byte(value c, value channel_uri, value stream_id) {
+  CAMLparam3(c, channel_uri, stream_id);
+  aeron_t *client = (aeron_t*) as_ptr(c);
+
+  const char *channel_uri_on_c_heap = String_val(channel_uri);
+  int32_t stream_id_c = Int32_val(stream_id);
+
+  aeron_async_add_subscription_t *async;
+  if (aeron_async_add_subscription(&async, client, channel_uri_on_c_heap, stream_id_c, NULL, NULL, NULL, NULL) < 0) {
+    CAMLreturn_result_error();
+  }
+
+  aeron_subscription_t *subscription = NULL;
+
+  while (NULL == subscription) {
+    if (aeron_async_add_subscription_poll(&subscription, async) < 0) {
+      CAMLreturn_result_error();
+    }
+
+    if (NULL == subscription) {
+      aeron_main_idle_strategy(client, 0);
+    }
+  }
+
+  CAMLlocal1(subscription_as_value);
+  subscription_as_value = as_value(subscription);
+  CAMLreturn_result_ok(subscription_as_value);
+}
+
+void on_fragment_polled(void *clientd, const uint8_t *buffer, size_t length, aeron_header_t *header) {
+  value fragment_handler = (value) clientd;
+  // TODO how should we deal with exceptions here? The [@noalloc] annotation means we cannot throw.
+  caml_callback2(fragment_handler, as_value((void *) buffer), Val_int(length));
+}
+
+CAMLprim int64_t aeron_ocaml_subscription_poll(value p, int32_t fragment_limit, value fragment_handler) {
+  aeron_subscription_t *subscription = (aeron_subscription_t*) as_ptr(p);
+  return aeron_subscription_poll(subscription, on_fragment_polled, (void *) fragment_handler, fragment_limit);
+}
+
+CAMLprim value aeron_ocaml_subscription_poll_byte(value p, value fragment_limit, value fragment_handler) {
+  CAMLparam3(p, fragment_limit, fragment_handler);
+  CAMLlocal1(result_code);
+  result_code = Val_int(aeron_ocaml_subscription_poll(p, fragment_limit, fragment_handler));
+  CAMLreturn(result_code);
+}
+
+CAMLprim void aeron_ocaml_subscription_close_byte(value p) {
+  CAMLparam1(p);
+  aeron_subscription_t *publication = (aeron_subscription_t*) as_ptr(p);
+  aeron_subscription_close(publication, NULL, NULL);
   CAMLreturn0;
 }

@@ -89,3 +89,26 @@ let add_exclusive_publication ~channel_uri ~stream_id client =
   client_add_exclusive_publication client channel_uri stream_id
 
 let idle ~work_count client = client_idle work_count client
+
+type fragment_handler = Unsafe_buffer.t -> int -> unit
+
+module Subscription = struct
+  type t
+
+  external subscription_poll :
+    t -> (int32[@unboxed]) -> fragment_handler -> (int32[@unboxed])
+    = "aeron_ocaml_subscription_poll_byte" "aeron_ocaml_subscription_poll"
+    [@@noalloc]
+
+  let poll ~fragment_limit fragment_handler subscription =
+    subscription_poll subscription fragment_limit fragment_handler
+
+  external close : t -> unit = "aeron_ocaml_subscription_close_byte"
+end
+
+external client_add_subscription :
+  t -> string -> int32 -> (Subscription.t, string) Result.t
+  = "aeron_ocaml_client_add_subscription_byte"
+
+let add_subscription ~channel_uri ~stream_id client =
+  client_add_subscription client channel_uri stream_id
