@@ -1,0 +1,8 @@
+(executable
+ (name basic_subscriber)
+ (modes
+  (native exe))
+ (ocamlopt_flags -O3 -linkall -S)
+ (libraries aeron_ocaml core)
+ (preprocess
+  (pps ppx_jane)))

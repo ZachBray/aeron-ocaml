@@ -33,8 +33,8 @@ let run_publisher () =
   let%bind client = Aeron_client.start ctx in
   let%map publication =
     Aeron_client.add_exclusive_publication
-      ~channel_uri:"aeron:udp?endpoint=localhost:20121" ~stream_id:1001l
-      client
+    (* ~channel_uri:"aeron:udp?endpoint=localhost:20121" *)
+      ~channel_uri:"aeron:ipc" ~stream_id:1001l client
   in
   offer_loop publication ; Aeron_client.close client
 
