@@ -15,7 +15,7 @@ let offer_loop publication =
     let module Publication = Aeron_client.Publication in
     if !is_running then (
       let result =
-        Publication.offer ~buffer ~offset:0l ~length:12l publication
+        Publication.offer ~buffer ~offset:0 ~length:12 publication
       in
       (* TODO call idle strategy here *)
       ignore result ; offer_loop_aux () )
@@ -34,7 +34,7 @@ let run_publisher () =
   let%map publication =
     Aeron_client.add_exclusive_publication
     (* ~channel_uri:"aeron:udp?endpoint=localhost:20121" *)
-      ~channel_uri:"aeron:ipc" ~stream_id:1001l client
+      ~channel_uri:"aeron:ipc" ~stream_id:1001 client
   in
   offer_loop publication ; Aeron_client.close client
 

@@ -27,7 +27,7 @@ val close : t -> unit
 (** Closes an Aeron client and frees its resources, e.g., its conductor
     thread. Users must not perform any further operations on the client [t]. *)
 
-val idle : work_count:int32 -> t -> unit
+val idle : work_count:int -> t -> unit
 (** Waits for an operation to complete. *)
 
 (** {2 Publishing} *)
@@ -50,14 +50,14 @@ module Publication : sig
       on the publication after calling this method. *)
 
   val offer :
-    buffer:Unsafe_buffer.t -> offset:int32 -> length:int32 -> t -> Code.t
+    buffer:Unsafe_buffer.t -> offset:int -> length:int -> t -> Code.t
   (** Attempts to publish a message encoded within the [buffer] at the
       supplied [offset] and with the given [length] in bytes. *)
 end
 
 val add_exclusive_publication :
      channel_uri:string
-  -> stream_id:int32
+  -> stream_id:int
   -> t
   -> (Publication.t, string) Result.t
 (** Creates a new exclusive (i.e., single-threaded) publication for
@@ -71,7 +71,7 @@ type fragment_handler = Unsafe_buffer.t -> int -> unit
 module Subscription : sig
   type t
 
-  val poll : fragment_limit:int32 -> fragment_handler -> t -> int32
+  val poll : fragment_limit:int -> fragment_handler -> t -> int
   (** Poll for new messages in a stream. If new messages are found beyond the
       last consumed position then they will be delivered to the handler up to
       a limited number of fragments as specified. Returns the number of
@@ -84,7 +84,7 @@ end
 
 val add_subscription :
      channel_uri:string
-  -> stream_id:int32
+  -> stream_id:int
   -> t
   -> (Subscription.t, string) Result.t
 (** Creates a new subscription for the reception of messages. Users should

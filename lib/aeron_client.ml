@@ -19,7 +19,7 @@ external client_init : context -> (t, string) Result.t
 external client_start : t -> (unit, string) Result.t
   = "aeron_ocaml_client_start_byte"
 
-external client_idle : (int32[@unboxed]) -> t -> unit
+external client_idle : (int[@untagged]) -> t -> unit
   = "aeron_ocaml_client_idle_byte" "aeron_ocaml_client_idle"
   [@@noalloc]
 
@@ -54,11 +54,10 @@ let close = client_close
 
 module Publication = struct
   module Code = struct
-    open Int64
 
-    type t = int64
+    type t = int
 
-    let was_successful code = code > 0L
+    let was_successful code = code > 0
   end
 
   type t
@@ -66,9 +65,9 @@ module Publication = struct
   external exclusive_publication_offer :
        t
     -> Unsafe_buffer.t
-    -> (int32[@unboxed])
-    -> (int32[@unboxed])
-    -> (int64[@unboxed])
+    -> (int[@untagged])
+    -> (int[@untagged])
+    -> (int[@untagged])
     = "aeron_ocaml_exclusive_publication_offer_byte" "aeron_ocaml_exclusive_publication_offer"
     [@@noalloc]
 
@@ -82,7 +81,7 @@ module Publication = struct
 end
 
 external client_add_exclusive_publication :
-  t -> string -> int32 -> (Publication.t, string) Result.t
+  t -> string -> int -> (Publication.t, string) Result.t
   = "aeron_ocaml_client_add_exclusive_publication_byte"
 
 let add_exclusive_publication ~channel_uri ~stream_id client =
@@ -96,7 +95,7 @@ module Subscription = struct
   type t
 
   external subscription_poll :
-    t -> (int32[@unboxed]) -> fragment_handler -> (int32[@unboxed])
+    t -> (int[@untagged]) -> fragment_handler -> int
     = "aeron_ocaml_subscription_poll_byte" "aeron_ocaml_subscription_poll"
     [@@noalloc]
 
@@ -107,7 +106,7 @@ module Subscription = struct
 end
 
 external client_add_subscription :
-  t -> string -> int32 -> (Subscription.t, string) Result.t
+  t -> string -> int -> (Subscription.t, string) Result.t
   = "aeron_ocaml_client_add_subscription_byte"
 
 let add_subscription ~channel_uri ~stream_id client =

@@ -1,3 +1,4 @@
+#include "caml/config.h"
 #include "caml/mlvalues.h"
 #include <assert.h>
 #include <stdint.h>
@@ -93,14 +94,14 @@ CAMLprim value aeron_ocaml_client_start_byte(value c) {
   CAMLreturn_result_ok(Val_unit);
 }
 
-CAMLprim void aeron_ocaml_client_idle(value c, int32_t work_count) {
+CAMLprim void aeron_ocaml_client_idle(value c, intnat work_count) {
   aeron_t *client = (aeron_t*) as_ptr(c);
   aeron_main_idle_strategy(client, work_count);
 }
 
 CAMLprim void aeron_ocaml_client_idle_byte(value c, value work_count) {
   CAMLparam2(c, work_count);
-  aeron_ocaml_client_idle(c, Int32_val(work_count));
+  aeron_ocaml_client_idle(c, Int_val(work_count));
   CAMLreturn0;
 }
 
@@ -116,7 +117,7 @@ CAMLprim value aeron_ocaml_client_add_exclusive_publication_byte(value c, value 
   aeron_t *client = (aeron_t*) as_ptr(c);
 
   const char *channel_uri_on_c_heap = String_val(channel_uri);
-  int32_t stream_id_c = Int32_val(stream_id);
+  intnat stream_id_c = Int_val(stream_id);
 
   aeron_async_add_exclusive_publication_t *async;
   if (aeron_async_add_exclusive_publication(&async, client, channel_uri_on_c_heap, stream_id_c) < 0) {
@@ -140,7 +141,7 @@ CAMLprim value aeron_ocaml_client_add_exclusive_publication_byte(value c, value 
   CAMLreturn_result_ok(publication_as_value);
 }
 
-CAMLprim int64_t aeron_ocaml_exclusive_publication_offer(value p, value b, int32_t offset, int32_t length) {
+CAMLprim intnat aeron_ocaml_exclusive_publication_offer(value p, value b, intnat offset, intnat length) {
   aeron_exclusive_publication_t *publication = (aeron_exclusive_publication_t*) as_ptr(p);
   const uint8_t *buffer = (const uint8_t *) (as_ptr(b) + offset);
   return aeron_exclusive_publication_offer(publication, buffer, length, NULL, NULL);
@@ -165,7 +166,7 @@ CAMLprim value aeron_ocaml_client_add_subscription_byte(value c, value channel_u
   aeron_t *client = (aeron_t*) as_ptr(c);
 
   const char *channel_uri_on_c_heap = String_val(channel_uri);
-  int32_t stream_id_c = Int32_val(stream_id);
+  intnat stream_id_c = Int_val(stream_id);
 
   aeron_async_add_subscription_t *async;
   if (aeron_async_add_subscription(&async, client, channel_uri_on_c_heap, stream_id_c, NULL, NULL, NULL, NULL) < 0) {
@@ -195,7 +196,7 @@ void on_fragment_polled(void *clientd, const uint8_t *buffer, size_t length, aer
   caml_callback2(fragment_handler, as_value((void *) buffer), Val_int(length));
 }
 
-CAMLprim int64_t aeron_ocaml_subscription_poll(value p, int32_t fragment_limit, value fragment_handler) {
+CAMLprim intnat aeron_ocaml_subscription_poll(value p, intnat fragment_limit, value fragment_handler) {
   aeron_subscription_t *subscription = (aeron_subscription_t*) as_ptr(p);
   return aeron_subscription_poll(subscription, on_fragment_polled, (void *) fragment_handler, fragment_limit);
 }

@@ -24,7 +24,7 @@ let consume_loop subscription =
     let module S = Aeron_client.Subscription in
     if !is_running then (
       let result =
-        S.poll ~fragment_limit:10l fragment_handler subscription
+        S.poll ~fragment_limit:10 fragment_handler subscription
       in
       (* TODO call idle strategy here *)
       ignore result ; consume_loop_aux () )
@@ -42,7 +42,7 @@ let run_subscriber () =
   let%map subscription =
     Aeron_client.add_subscription
     (* ~channel_uri:"aeron:udp?endpoint=localhost:20121" *)
-      ~channel_uri:"aeron:ipc" ~stream_id:1001l client
+      ~channel_uri:"aeron:ipc" ~stream_id:1001 client
   in
   consume_loop subscription ; Aeron_client.close client
 
