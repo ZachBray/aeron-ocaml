@@ -190,21 +190,27 @@ CAMLprim value aeron_ocaml_client_add_subscription_byte(value c, value channel_u
   CAMLreturn_result_ok(subscription_as_value);
 }
 
+CAMLprim intnat aeron_ocaml_header_position(value header_value) {
+  aeron_header_t *header = (aeron_header_t *) as_ptr(header_value);
+  return aeron_header_position(header);
+}
+
+CAMLprim value aeron_ocaml_header_position_byte(value header_value) {
+  return Val_int(aeron_ocaml_header_position(header_value));
+}
+
 void on_fragment_polled(void *clientd, const uint8_t *buffer, size_t length, aeron_header_t *header) {
   value fragment_handler = (value) clientd;
   // TODO how should we deal with exceptions here? The [@noalloc] annotation means we cannot throw.
-  caml_callback2(fragment_handler, as_value((void *) buffer), Val_int(length));
-}
-
-CAMLprim intnat aeron_ocaml_subscription_poll(value p, intnat fragment_limit, value fragment_handler) {
-  aeron_subscription_t *subscription = (aeron_subscription_t*) as_ptr(p);
-  return aeron_subscription_poll(subscription, on_fragment_polled, (void *) fragment_handler, fragment_limit);
+  caml_callback3(fragment_handler, as_value((void *) buffer), Val_int(length), as_value((void *) header));
 }
 
 CAMLprim value aeron_ocaml_subscription_poll_byte(value p, value fragment_limit, value fragment_handler) {
   CAMLparam3(p, fragment_limit, fragment_handler);
   CAMLlocal1(result_code);
-  result_code = Val_int(aeron_ocaml_subscription_poll(p, fragment_limit, fragment_handler));
+  aeron_subscription_t *subscription = (aeron_subscription_t*) as_ptr(p);
+  int poll_result = aeron_subscription_poll(subscription, on_fragment_polled, (void *) fragment_handler, fragment_limit);
+  result_code = Val_int(poll_result);
   CAMLreturn(result_code);
 }
 

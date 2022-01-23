@@ -3,28 +3,28 @@ open Core
 open Aeron_ocaml
 open Shapeshifter
 
+let fragment_handler buffer length header =
+  let module H = Aeron_client.Header in
+  let expected_message =
+    length = 12
+    && Unsafe_buffer.get_i32 ~offset:0 buffer = 42
+    && Unsafe_buffer.get_i32 ~offset:4 buffer = 43
+    && Unsafe_buffer.get_i32 ~offset:8 buffer = 44
+  in
+  if not expected_message then
+    print_endline
+      ( "Unexpected message. length=" ^ Int.to_string length ^ ", position="
+      ^ Int.to_string (H.position header) )
+  else ()
+
 let consume_loop subscription =
   let is_running = ref true in
   let terminate _ = is_running := false in
   System.set_signal System.sigint (System.Signal_handle terminate) ;
-  let fragment_handler buffer length =
-    let expected_message =
-      length = 12
-      &&
-      Unsafe_buffer.get_i32 ~offset:0 buffer = 42
-      && Unsafe_buffer.get_i32 ~offset:4 buffer = 43
-      && Unsafe_buffer.get_i32 ~offset:8 buffer = 44
-    in
-    if not expected_message then
-      print_endline ("Unexpected message. length=" ^ Int.to_string length)
-    else ()
-  in
   let rec consume_loop_aux () =
     let module S = Aeron_client.Subscription in
     if !is_running then (
-      let result =
-        S.poll ~fragment_limit:10 fragment_handler subscription
-      in
+      let result = S.poll ~fragment_limit:1 fragment_handler subscription in
       (* TODO call idle strategy here *)
       ignore result ; consume_loop_aux () )
     else ()

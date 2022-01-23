@@ -54,7 +54,6 @@ let close = client_close
 
 module Publication = struct
   module Code = struct
-
     type t = int
 
     let was_successful code = code > 0
@@ -89,15 +88,21 @@ let add_exclusive_publication ~channel_uri ~stream_id client =
 
 let idle ~work_count client = client_idle work_count client
 
-type fragment_handler = Unsafe_buffer.t -> int -> unit
+module Header = struct
+  type t
+
+  external position : t -> (int[@untagged])
+    = "aeron_ocaml_header_position_byte" "aeron_ocaml_header_position"
+    [@@noalloc]
+end
+
+type fragment_handler = Unsafe_buffer.t -> int -> Header.t -> unit
 
 module Subscription = struct
   type t
 
-  external subscription_poll :
-    t -> (int[@untagged]) -> fragment_handler -> int
-    = "aeron_ocaml_subscription_poll_byte" "aeron_ocaml_subscription_poll"
-    [@@noalloc]
+  external subscription_poll : t -> int -> fragment_handler -> int
+    = "aeron_ocaml_subscription_poll_byte"
 
   let poll ~fragment_limit fragment_handler subscription =
     subscription_poll subscription fragment_limit fragment_handler

@@ -66,7 +66,15 @@ val add_exclusive_publication :
 
 (** {2 Subscribing} *)
 
-type fragment_handler = Unsafe_buffer.t -> int -> unit
+module Header : sig
+  type t
+
+  val position : t -> int
+  (** Returns the current position to which the underlying image has advanced
+      on reading this message. *)
+end
+
+type fragment_handler = Unsafe_buffer.t -> int -> Header.t -> unit
 
 module Subscription : sig
   type t
