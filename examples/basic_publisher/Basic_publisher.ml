@@ -7,10 +7,10 @@ let offer_loop publication =
   let is_running = ref true in
   let terminate _ = is_running := false in
   System.set_signal System.sigint (System.Signal_handle terminate) ;
-  let buffer = Unsafe_buffer.acquire ~byte_length:64l in
-  Unsafe_buffer.set_i32 ~offset:0l ~value:42l buffer ;
-  Unsafe_buffer.set_i32 ~offset:4l ~value:43l buffer ;
-  Unsafe_buffer.set_i32 ~offset:8l ~value:44l buffer ;
+  let buffer = Unsafe_buffer.acquire ~byte_length:64 in
+  Unsafe_buffer.set_i32 ~offset:0 ~value:42 buffer ;
+  Unsafe_buffer.set_i32 ~offset:4 ~value:43 buffer ;
+  Unsafe_buffer.set_i32 ~offset:8 ~value:44 buffer ;
   let rec offer_loop_aux () =
     let module Publication = Aeron_client.Publication in
     if !is_running then (

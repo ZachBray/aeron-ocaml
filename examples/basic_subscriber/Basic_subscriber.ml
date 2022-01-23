@@ -11,10 +11,9 @@ let consume_loop subscription =
     let expected_message =
       length = 12
       &&
-      let open Int32 in
-      Unsafe_buffer.get_i32 ~offset:0l buffer = 42l
-      && Unsafe_buffer.get_i32 ~offset:4l buffer = 43l
-      && Unsafe_buffer.get_i32 ~offset:8l buffer = 44l
+      Unsafe_buffer.get_i32 ~offset:0 buffer = 42
+      && Unsafe_buffer.get_i32 ~offset:4 buffer = 43
+      && Unsafe_buffer.get_i32 ~offset:8 buffer = 44
     in
     if not expected_message then
       print_endline ("Unexpected message. length=" ^ Int.to_string length)
